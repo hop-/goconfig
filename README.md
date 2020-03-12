@@ -21,7 +21,6 @@ All config files are in config directory
 default.json:
 ```json
 {
-  // Customer configurations
   "Customer": {
     "db": {
       "host": "localhost",
@@ -30,7 +29,6 @@ default.json:
     },
     "credit": {
       "initialLimit": 100,
-      // Set low for development
       "initialDays": 1
     }
   }
