@@ -6,14 +6,22 @@ import (
 	"strings"
 )
 
+var (
+	configDir = "config"
+)
+
 const (
-	configDir           = "config/"
-	defaultConfigName   = configDir + "default.json"
-	customEnvConfigName = configDir + "custom-environment-variables.json"
+	defaultConfigName   = "default.json"
+	customEnvConfigName = "custom-environment-variables.json"
 )
 
 // Load configurations
 func Load() error {
+	hostConfigDir := os.Getenv("HOST_CONFIG_DIR")
+	if hostConfigDir != "" {
+		configDir = hostConfigDir
+	}
+
 	if err := loadDefaultConfig(); err != nil {
 		return err
 	}
@@ -40,7 +48,7 @@ func Get(objectName string) interface{} {
 	return value
 }
 
-// GetObject assign value to object
+// GetObject assign value to object with already structured
 func GetObject(objectName string, object interface{}) error {
 	value := Get(objectName)
 	buf, err := json.Marshal(value)
@@ -52,8 +60,23 @@ func GetObject(objectName string, object interface{}) error {
 	return json.Unmarshal(buf, object)
 }
 
+// Has return true if config exist and false if not
+func Has(objectName string) bool {
+	value := cfg
+
+	for _, k := range strings.Split(objectName, ".") {
+		value = value.(map[string]interface{})[k]
+
+		if value == nil {
+			return false
+		}
+	}
+
+	return true
+}
+
 func loadDefaultConfig() error {
-	file, err := os.Open(defaultConfigName)
+	file, err := os.Open(configDir + "/" + defaultConfigName)
 	defer file.Close()
 	if err != nil {
 		return err
@@ -82,7 +105,7 @@ func loadFile(fileName string) error {
 
 // load custon environment configuration from file
 func loadCustomEnvConfig() error {
-	file, err := os.Open(customEnvConfigName)
+	file, err := os.Open(configDir + "/" + customEnvConfigName)
 	defer file.Close()
 	if err != nil {
 		return nil

@@ -16,7 +16,8 @@ go get github.com/hop-/goconfig
 
 Usage:
 
-All config files are in config directory
+All config files are in `HOST_CONFIG_DIR` directory, default is 'config'
+It is using `HOST_ENV` environment variable to define the application deployment environment
 
 default.json:
 ```json
@@ -35,7 +36,9 @@ default.json:
 }
 ```
 
+If `HOST_ENV` is 'production'
 Override some configurations for production.
+
 production.json:
 ```json
 {
