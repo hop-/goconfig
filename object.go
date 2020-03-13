@@ -55,5 +55,5 @@ func evaluateConfig(envCfg interface{}) interface{} {
 }
 
 func getConfigFile(host string) string {
-	return configDir + host + ".json"
+	return configDir + "/" + host + ".json"
 }
