@@ -56,7 +56,7 @@ import "github.com/hop-/goconfig"
 
 func main() {
   if err := goconfig.Load(); err != nil {
-    log.Info(err.Error())
+    // some error handling
   }
   
   consumer := goconfig.Get("Consumer")
