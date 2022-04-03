@@ -1,0 +1,14 @@
+{
+  "some_int": 100,
+  "some_string": "test_string",
+  "some_array": [
+    "1",
+    2,
+    "3",
+    "hello"
+  ],
+  "some_object": {
+    "key_1": "value_1",
+    "key_2": "value_2"
+  }
+}

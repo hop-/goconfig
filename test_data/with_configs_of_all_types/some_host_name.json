@@ -1,0 +1,13 @@
+{
+  "some_int": 10,
+  "some_string": "some_text",
+  "some_other_string": "some_other_text",
+  "some_array": [
+    2
+  ],
+
+  "some_object": {
+    "key_2": "new_value_2",
+    "key_3": "value_3"
+  }
+}
