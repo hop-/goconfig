@@ -77,10 +77,10 @@ func Has(objectName string) bool {
 
 func loadDefaultConfig() error {
 	file, err := os.Open(configDir + "/" + defaultConfigName)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	return json.NewDecoder(file).Decode(&cfg)
 }
@@ -88,10 +88,10 @@ func loadDefaultConfig() error {
 // load configurtion form file
 func loadFile(fileName string) error {
 	file, err := os.Open(fileName)
-	defer file.Close()
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	var overwriteCfg interface{}
 	if err := json.NewDecoder(file).Decode(&overwriteCfg); err != nil {
@@ -106,10 +106,10 @@ func loadFile(fileName string) error {
 // load custon environment configuration from file
 func loadCustomEnvConfig() error {
 	file, err := os.Open(configDir + "/" + customEnvConfigName)
-	defer file.Close()
 	if err != nil {
 		return nil
 	}
+	defer file.Close()
 
 	var envCfg interface{}
 	if err := json.NewDecoder(file).Decode(&envCfg); err != nil {
