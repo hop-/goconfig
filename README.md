@@ -1,5 +1,7 @@
 # GoConfig
 
+[CI](https://github.com/hop-/goconfig/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/hop-/goconfig)](https://goreportcard.com/report/github.com/hop-/goconfig)
+
 A Go port of Node.js config package (which uses json files to configure application)
 
 From original Library:
@@ -20,6 +22,7 @@ All config files are in `HOST_CONFIG_DIR` directory, default is 'config'
 It is using `HOST_ENV` environment variable to define the application deployment environment
 
 default.json:
+
 ```json
 {
   "Customer": {
@@ -40,6 +43,7 @@ If `HOST_ENV` is 'production'
 Override some configurations for production.
 
 production.json:
+
 ```json
 {
   "Customer": {
@@ -51,6 +55,7 @@ production.json:
 ```
 
 Use config in your code:
+
 ```go
 import "github.com/hop-/goconfig"
 
