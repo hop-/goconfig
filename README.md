@@ -1,6 +1,6 @@
 # GoConfig
 
-![CI](https://github.com/hop-/goconfig/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/hop-/goconfig)](https://goreportcard.com/report/github.com/hop-/goconfig)
+![CI](https://github.com/hop-/goconfig/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/hop-/goconfig)](https://goreportcard.com/report/github.com/hop-/goconfig)[![Go Reference](https://pkg.go.dev/badge/github.com/hop-/goconfig.svg)](https://pkg.go.dev/github.com/hop-/goconfig)
 
 A Go port of Node.js config package (which uses json files to configure application)
 
