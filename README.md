@@ -19,9 +19,10 @@ go get github.com/hop-/goconfig
 Usage:
 
 All config files are in `HOST_CONFIG_DIR` directory, default is 'config'
+
 It is using `HOST_ENV` environment variable to define the application deployment environment
 
-default.json:
+`$HOST_CONFIG_DIR`/default.json:
 
 ```json
 {
@@ -39,10 +40,9 @@ default.json:
 }
 ```
 
-If `HOST_ENV` is 'production'
-Override some configurations for production.
+Override some configurations for production when `HOST_ENV` is 'production'.
 
-production.json:
+`$HOST_CONFIG_DIR`/production.json:
 
 ```json
 {
@@ -59,26 +59,35 @@ Use config in your code:
 ```go
 import "github.com/hop-/goconfig"
 
-func main() {
-  if err := goconfig.Load(); err != nil {
-    // some error handling
-  }
-  
-  consumer := goconfig.Get("Consumer")
-
-  consumerStructured := struct {
-    Consumer struct {
-      Db struct {
-        host string
-        port int
-        dbName string
-      }
-      Credit struct {
-        InitialLimit int
-        InitialDays int
-      }
+type Consumer struct {
+  Consumer struct {
+    Db struct {
+      host string
+      port int
+      dbName string
+    }
+    Credit struct {
+      InitialLimit int
+      InitialDays int
     }
   }
-  goconfig.GetObject("Consumer", &consumerStructured)
+}
+
+func main() {
+  if err := goconfig.Load(); err != nil {
+    // Some error handling
+  }
+
+  consumer, err := goconfig.Get[Consumer]("Consumer")
+  if err != nil {
+    // Some error handling
+  }
+
+  host, err := goconfig.Get[string]("Consumer.Db.host")
+  if err != nil {
+    // Some error handling
+  }
+
+  // Your code
 }
 ```

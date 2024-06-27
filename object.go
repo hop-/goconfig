@@ -3,16 +3,16 @@ package goconfig
 import "os"
 
 var (
-	cfg interface{}
+	cfg any
 )
 
 // mergObject function merge 2 config objects in one
-func mergeObject(dst interface{}, src interface{}) interface{} {
+func mergeObject(dst any, src any) any {
 	switch dst := dst.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		switch src := src.(type) {
-		case map[string]interface{}:
-			r := make(map[string]interface{})
+		case map[string]any:
+			r := make(map[string]any)
 
 			for k, v := range dst {
 				r[k] = v
@@ -31,29 +31,31 @@ func mergeObject(dst interface{}, src interface{}) interface{} {
 }
 
 // evaluateConfig function evaluate all env variables in object
-func evaluateConfig(envCfg interface{}) interface{} {
+func evaluateConfig(envCfg any) (any, bool) {
 	switch envCfg := envCfg.(type) {
-	case map[string]interface{}:
-		r := make(map[string]interface{})
+	case map[string]any:
+		r := make(map[string]any)
 
 		for k, v := range envCfg {
-			r[k] = evaluateConfig(v)
+			value, status := evaluateConfig(v)
+			if status {
+				r[k] = value
+			}
 		}
-		return r
-	case []interface{}:
-		r := []interface{}{}
+		return r, true
+	case []any:
+		r := []any{}
 
 		for i := range envCfg {
-			r = append(r, evaluateConfig(envCfg[i]))
+			value, status := evaluateConfig(envCfg[i])
+			if status {
+				r = append(r, value)
+			}
 		}
-		return r
+		return r, true
 	case string:
-		return os.Getenv(envCfg)
+		return os.LookupEnv(envCfg)
 	default:
-		return envCfg
+		return envCfg, true
 	}
-}
-
-func getConfigFile(host string) string {
-	return configDir + "/" + host + ".json"
 }
