@@ -1,3 +1,5 @@
 {
-  "some_env_config": "ENV_VAR_NAME"
+  "some_env_config": "ENV_VAR_NAME",
+  "some_bool_env_config": "ENV_BOOL_VAR",
+  "some_int_env_config": "ENV_INT_VAR"
 }
