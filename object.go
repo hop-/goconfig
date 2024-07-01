@@ -6,7 +6,7 @@ var (
 	cfg any
 )
 
-// mergObject function merge 2 config objects in one
+// mergObject function merges 2 config objects in one
 func mergeObject(dst any, src any) any {
 	switch dst := dst.(type) {
 	case map[string]any:
@@ -30,7 +30,7 @@ func mergeObject(dst any, src any) any {
 	}
 }
 
-// evaluateConfig function evaluate all env variables in object
+// evaluateConfig function evaluates all env variables in object
 func evaluateConfig(envCfg any) (any, bool) {
 	switch envCfg := envCfg.(type) {
 	case map[string]any:

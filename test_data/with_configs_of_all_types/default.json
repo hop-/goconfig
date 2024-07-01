@@ -1,6 +1,8 @@
 {
   "some_int": 100,
   "some_string": "test_string",
+  "some_bool_env_config": false,
+  "some_int_env_config": 0,
   "some_array": [
     "1",
     2,

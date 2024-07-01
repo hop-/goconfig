@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -49,6 +50,7 @@ func Get[T any](objectName string) (*T, error) {
 	return convertValue[T](value)
 }
 
+// GetAny config as any
 func GetAny(objectName string) any {
 	value := cfg
 
@@ -59,15 +61,27 @@ func GetAny(objectName string) any {
 	return value
 }
 
+// convertValue[T] converts value to given type
 func convertValue[T any](value any) (*T, error) {
 	buf, err := json.Marshal(value)
-
 	if err != nil {
 		return nil, err
 	}
 
 	var newValue T
-	json.Unmarshal(buf, &newValue)
+	err = json.Unmarshal(buf, &newValue)
+	if err != nil {
+		// try to mitigate quoted values from custom envs
+		s, unquoteErr := strconv.Unquote(string(buf))
+		if unquoteErr != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal([]byte(s), &newValue)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return &newValue, nil
 }
@@ -87,10 +101,12 @@ func Has(objectName string) bool {
 	return true
 }
 
+// getConfigFile returns file path by host
 func getConfigFile(host string) string {
 	return path.Join(configDir, host+".json")
 }
 
+// loadDefaultConfig loads default config
 func loadDefaultConfig() error {
 	defaultConfigPath := path.Join(configDir, defaultConfigName)
 	file, err := os.Open(defaultConfigPath)
@@ -102,7 +118,7 @@ func loadDefaultConfig() error {
 	return json.NewDecoder(file).Decode(&cfg)
 }
 
-// load configurtion form file
+// loadFile loads configurtion from file
 func loadFile(fileName string) error {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -120,7 +136,7 @@ func loadFile(fileName string) error {
 	return nil
 }
 
-// load custom environment configuration from file
+// loadCustomEnvConfig loads custom environment configuration from file
 func loadCustomEnvConfig() error {
 	configPath := path.Join(configDir, customEnvConfigName)
 	file, err := os.Open(configPath)

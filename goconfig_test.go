@@ -65,21 +65,21 @@ func TestLoadWithDefault(t *testing.T) {
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_int_as_float != 100.0 {
-		t.Errorf("Float should be 100.0 but got %v", some_int_as_float)
+		t.Errorf("Float should be 100.0 but got %v", *some_int_as_float)
 	}
 
 	some_int, err := Get[int32]("some_int")
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_int != 100 {
-		t.Errorf("Integer should be 100 but got %v", some_int_as_float)
+		t.Errorf("Integer should be 100 but got %v", *some_int_as_float)
 	}
 
 	some_string, err := Get[string]("some_string")
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_string != "test_string" {
-		t.Errorf("String should be 'test_string' but got %v", some_string)
+		t.Errorf("String should be 'test_string' but got %v", *some_string)
 	}
 
 	some_array := GetAny("some_array")
@@ -123,7 +123,7 @@ func TestLoadWithDefault(t *testing.T) {
 	} else {
 
 		if some_object_of_defined_type.Key1 != "value_1" || some_object_of_defined_type.Key2 != "value_2" {
-			t.Errorf(`Expected { Key1: "value_1", Key2: "value_2" } but got %+v`, some_object_of_defined_type)
+			t.Errorf(`Expected { Key1: "value_1", Key2: "value_2" } but got %+v`, *some_object_of_defined_type)
 		}
 	}
 }
@@ -133,6 +133,8 @@ func TestLoadWithHost(t *testing.T) {
 	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
 	os.Setenv("HOST_ENV", "some_host_name")
 	os.Setenv("ENV_VAR_NAME", "some_value")
+	os.Setenv("ENV_BOOL_VAR", "true")
+	os.Setenv("ENV_INT_VAR", "2")
 
 	Load()
 
@@ -140,26 +142,40 @@ func TestLoadWithHost(t *testing.T) {
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_int != 10 {
-		t.Errorf("Integer should be 10 but got %v", some_int)
+		t.Errorf("Integer should be 10 but got %v", *some_int)
 	}
 
 	some_string, err := Get[string]("some_string")
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_string != "some_text" {
-		t.Errorf("string should be 'some_text' but got %v", some_string)
+		t.Errorf("string should be 'some_text' but got %v", *some_string)
 	}
 
 	some_other_string, err := Get[string]("some_other_string")
 	if err != nil {
 		t.Error("Error happened", err.Error())
 	} else if *some_other_string != "some_other_text" {
-		t.Errorf("string should be 'some_other_text' but got %v", some_other_string)
+		t.Errorf("string should be 'some_other_text' but got %v", *some_other_string)
 	}
 
 	some_env_config := GetAny("some_env_config")
 	if some_env_config != "some_value" {
 		t.Errorf("string should be 'some_value' but got %v", some_env_config)
+	}
+
+	some_bool_env_config, err := Get[bool]("some_bool_env_config")
+	if err != nil {
+		t.Error("Error happened", err.Error())
+	} else if !*some_bool_env_config {
+		t.Errorf("bool should be 'true' but got %v", *some_bool_env_config)
+	}
+
+	some_int_env_config, err := Get[int]("some_int_env_config")
+	if err != nil {
+		t.Error("Error happened", err.Error())
+	} else if *some_int_env_config != 2 {
+		t.Errorf("bool should be 'true' but got %v", *some_int_env_config)
 	}
 
 	some_array := GetAny("some_array")
@@ -205,7 +221,7 @@ func TestLoadWithHost(t *testing.T) {
 		if some_object_of_defined_type.Key1 != "value_1" ||
 			some_object_of_defined_type.Key2 != "new_value_2" ||
 			some_object_of_defined_type.Key3 != "value_3" {
-			t.Errorf(`Expected { Key1: "value_1", Key2: "new_value_2", Key3: "value_3" } but got %+v`, some_object_of_defined_type)
+			t.Errorf(`Expected { Key1: "value_1", Key2: "new_value_2", Key3: "value_3" } but got %+v`, *some_object_of_defined_type)
 		}
 	}
 }
