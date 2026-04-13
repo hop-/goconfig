@@ -225,3 +225,413 @@ func TestLoadWithHost(t *testing.T) {
 		}
 	}
 }
+
+func TestHasExistingKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	if !Has("some_int") {
+		t.Error("Has() should return true for existing key")
+	}
+}
+
+func TestHasNonExistingKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	if Has("non_existing_key") {
+		t.Error("Has() should return false for non-existing key")
+	}
+}
+
+func TestHasNestedKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	if !Has("some_object.key_1") {
+		t.Error("Has() should return true for existing nested key")
+	}
+}
+
+func TestHasNonExistingNestedKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	if Has("some_object.non_existing_key") {
+		t.Error("Has() should return false for non-existing nested key")
+	}
+}
+
+func TestGetMissingKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	_, err := Get[string]("non_existing_key")
+	if err == nil {
+		t.Error("Get() should return error for missing key")
+	}
+}
+
+func TestGetNestedKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	val, err := Get[string]("some_object.key_1")
+	if err != nil {
+		t.Error("Get() should not return error for existing nested key", err)
+	} else if *val != "value_1" {
+		t.Errorf("Expected 'value_1' but got %v", *val)
+	}
+}
+
+func TestGetAnyMissingKey(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	val := GetAny("non_existing_key")
+	if val != nil {
+		t.Errorf("GetAny() should return nil for missing key, got %v", val)
+	}
+}
+
+func TestGetAnyEmptyPath(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	val := GetAny("")
+	if val == nil {
+		t.Error("GetAny() should return entire config for empty path")
+	}
+	kind := reflect.TypeOf(val).Kind()
+	if kind != reflect.Map {
+		t.Errorf("GetAny() with empty path should return map, got %v", kind)
+	}
+}
+
+func TestExtractAllRequiredFieldsPresent(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		SomeInt    int    `goconfig:"some_int"`
+		SomeString string `goconfig:"some_string"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Errorf("Extract() should not return error when all required fields are present, got: %v", err)
+	}
+}
+
+func TestExtractMissingRequiredField(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		Missing string `goconfig:"non_existing_key"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err == nil {
+		t.Error("Extract() should return error when required field is missing")
+	}
+}
+
+func TestExtractMissingOptionalField(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		Missing string `goconfig:"non_existing_key,optional"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Errorf("Extract() should not return error when optional field is missing, got: %v", err)
+	}
+}
+
+func TestExtractFieldWithNoTag(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		NoTag string
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Errorf("Extract() should not return error for fields without tag, got: %v", err)
+	}
+}
+
+func TestExtractExplicitRequiredField(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		Missing string `goconfig:"non_existing_key,required"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err == nil {
+		t.Error("Extract() should return error when explicitly required field is missing")
+	}
+}
+
+func TestLoadResetsConfig(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Setenv("HOST_ENV", "some_host_name")
+	os.Setenv("ENV_VAR_NAME", "some_value")
+	os.Setenv("ENV_BOOL_VAR", "true")
+	os.Setenv("ENV_INT_VAR", "2")
+	Load()
+
+	// Now reload with different env (no host override)
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	some_int, err := Get[int32]("some_int")
+	if err != nil {
+		t.Error("Error happened", err.Error())
+	} else if *some_int != 100 {
+		t.Errorf("After reload without host, integer should be 100 but got %v", *some_int)
+	}
+}
+
+func TestConfigErrorMessage(t *testing.T) {
+	err := &ConfigError{Message: "test error"}
+	if err.Error() != "test error" {
+		t.Errorf("ConfigError.Error() should return message, got: %v", err.Error())
+	}
+}
+
+func TestExtractNestedStruct(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		Key1 string `goconfig:"key_1"`
+		Key2 string `goconfig:"key_2"`
+	}
+
+	type Config struct {
+		SomeInt    int          `goconfig:"some_int"`
+		SomeObject ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Fatalf("Extract() should not return error for nested struct, got: %v", err)
+	}
+
+	if obj.SomeInt != 100 {
+		t.Errorf("Expected SomeInt=100 but got %v", obj.SomeInt)
+	}
+	if obj.SomeObject.Key1 != "value_1" {
+		t.Errorf("Expected SomeObject.Key1='value_1' but got %v", obj.SomeObject.Key1)
+	}
+	if obj.SomeObject.Key2 != "value_2" {
+		t.Errorf("Expected SomeObject.Key2='value_2' but got %v", obj.SomeObject.Key2)
+	}
+}
+
+func TestExtractNestedStructPointer(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		Key1 string `goconfig:"key_1"`
+		Key2 string `goconfig:"key_2"`
+	}
+
+	type Config struct {
+		SomeObject *ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{SomeObject: &ObjectConfig{}}
+	err := Extract("", obj)
+	if err != nil {
+		t.Fatalf("Extract() should not return error for nested struct pointer, got: %v", err)
+	}
+
+	if obj.SomeObject.Key1 != "value_1" {
+		t.Errorf("Expected SomeObject.Key1='value_1' but got %v", obj.SomeObject.Key1)
+	}
+	if obj.SomeObject.Key2 != "value_2" {
+		t.Errorf("Expected SomeObject.Key2='value_2' but got %v", obj.SomeObject.Key2)
+	}
+}
+
+func TestExtractNestedStructMissingRequiredField(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		Key1       string `goconfig:"key_1"`
+		MissingKey string `goconfig:"non_existing_key"`
+	}
+
+	type Config struct {
+		SomeObject ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err == nil {
+		t.Error("Extract() should return error when nested struct has missing required field")
+	}
+}
+
+func TestExtractNestedStructMissingOptionalField(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		Key1       string `goconfig:"key_1"`
+		MissingKey string `goconfig:"non_existing_key,optional"`
+	}
+
+	type Config struct {
+		SomeObject ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Errorf("Extract() should not return error when nested struct has missing optional field, got: %v", err)
+	}
+
+	if obj.SomeObject.Key1 != "value_1" {
+		t.Errorf("Expected SomeObject.Key1='value_1' but got %v", obj.SomeObject.Key1)
+	}
+}
+
+func TestExtractDeeplyNestedStruct(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type InnerConfig struct {
+		Key1 string `goconfig:"key_1"`
+	}
+
+	type OuterConfig struct {
+		Inner InnerConfig `goconfig:"some_object"`
+	}
+
+	type Config struct {
+		Outer OuterConfig `goconfig:""`
+	}
+
+	inner := &InnerConfig{}
+	err := Extract("some_object", inner)
+	if err != nil {
+		t.Fatalf("Extract() should not return error for deeply nested struct, got: %v", err)
+	}
+
+	if inner.Key1 != "value_1" {
+		t.Errorf("Expected Key1='value_1' but got %v", inner.Key1)
+	}
+}
+
+func TestExtractNestedStructWithNoTag(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		NoTag string
+		Key1  string `goconfig:"key_1"`
+	}
+
+	type Config struct {
+		SomeObject ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Errorf("Extract() should not return error when nested struct has field without tag, got: %v", err)
+	}
+
+	if obj.SomeObject.Key1 != "value_1" {
+		t.Errorf("Expected SomeObject.Key1='value_1' but got %v", obj.SomeObject.Key1)
+	}
+	if obj.SomeObject.NoTag != "" {
+		t.Errorf("Expected NoTag='' but got %v", obj.SomeObject.NoTag)
+	}
+}
+
+func TestExtractPreservesUntaggedFields(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type Config struct {
+		SomeInt int    `goconfig:"some_int"`
+		NoTag   string // should remain zero value
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Fatalf("Extract() should not return error, got: %v", err)
+	}
+
+	if obj.SomeInt != 100 {
+		t.Errorf("Expected SomeInt=100 but got %v", obj.SomeInt)
+	}
+	if obj.NoTag != "" {
+		t.Errorf("Expected NoTag to be zero value but got %v", obj.NoTag)
+	}
+}
+
+func TestExtractNestedStructReflectKind(t *testing.T) {
+	os.Setenv("HOST_CONFIG_DIR", "test_data/with_configs_of_all_types")
+	os.Unsetenv("HOST_ENV")
+	Load()
+
+	type ObjectConfig struct {
+		Key1 string `goconfig:"key_1"`
+		Key2 string `goconfig:"key_2"`
+	}
+
+	type Config struct {
+		SomeObject ObjectConfig `goconfig:"some_object"`
+	}
+
+	obj := &Config{}
+	err := Extract("", obj)
+	if err != nil {
+		t.Fatalf("Extract() should not return error, got: %v", err)
+	}
+
+	kind := reflect.TypeOf(obj.SomeObject).Kind()
+	if kind != reflect.Struct {
+		t.Errorf("Expected SomeObject to be a struct but got %v", kind)
+	}
+}

@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: [ '1.21', '1.20', '1.19' ]
+        go: [ '1.26', '1.25', '1.24' ]
         os: [ ubuntu-latest ]
     name: Test on ${{ matrix.os }} Go ${{ matrix.go }}
     steps:
